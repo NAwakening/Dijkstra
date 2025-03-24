@@ -47,14 +47,14 @@ namespace NAwakening.Dijkstra
 
         protected void Probing()
         {
-            for (int i = 0; i < _numberOfNodes.y; i++)
+            for (float i = 0; i < _numberOfNodes.y; i++)
             {
-                for (int j = 0; j < _numberOfNodes.x; j++) 
+                for (float j = 0; j < _numberOfNodes.x; j++) 
                 { 
                     node = Instantiate(_node);
                     node.transform.parent = _nodeParent;
-                    node.transform.position = new Vector3(transform.position.x + (j * (_mapDimensions.x / _numberOfNodes.x)), transform.position.y, transform.position.z + (i * (_mapDimensions.y / _numberOfNodes.y)));
-                    Collider[] colliders = Physics.OverlapSphere(node.transform.position, 1f);
+                    node.transform.position = new Vector3(transform.position.x + (j * ((float)_mapDimensions.x / (_numberOfNodes.x -1f))), transform.position.y, transform.position.z + (i * ((float)_mapDimensions.y / (_numberOfNodes.y -1f))));
+                    Collider[] colliders = Physics.OverlapSphere(node.transform.position, 0.5f);
                     if (colliders.Length > 0)
                     {
                         foreach (Collider collider in colliders)
