@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace NAwakening.Dijkstra
@@ -24,24 +25,22 @@ namespace NAwakening.Dijkstra
 
         #region RunTimeVariables
 
-        //protected List<conection> = new List<conection>
+        [SerializeField]protected List<Connection> _connections;
 
         #endregion
 
         #region PublicMethods
 
-        public void SetIconoToThisGameObject()
+        public void SetIconToNode()
         {
+            gameObject.name = "node" + "(" + transform.position.x.ToString("F2") + ", " + transform.position.z.ToString("F2") + ")";
             if (_state == NodeState.DESHABILITADO)
             {
                 IconManager.SetIcon(gameObject, IconManager.LabelIcon.Gray);
-                transform.GetChild(0).gameObject.SetActive(false);
             }
             else
             {
                 IconManager.SetIcon(gameObject, IconManager.LabelIcon.Green);
-                transform.GetChild(0).gameObject.name = transform.position.ToString();
-                IconManager.SetIcon(transform.GetChild(0).gameObject, IconManager.LabelIcon.Teal);
             }
         }
 
@@ -49,9 +48,15 @@ namespace NAwakening.Dijkstra
 
         #region SettersAndGetters
 
-        public NodeState SetState
+        public NodeState State
         {
             set { _state = value; }
+            get { return _state; }
+        }
+
+        public List<Connection> Connections
+        {
+            get { return _connections; }
         }
 
         #endregion
