@@ -2,6 +2,19 @@ using UnityEngine;
 
 namespace NAwakening.Dijkstra
 {
+    #region
+
+    public enum ConnectionDirection
+    {
+        Horizontal,
+        Vertical,
+        DiagonalSO_NE,
+        DiagonalSE_NO,
+        Modified
+    }
+
+    #endregion
+
     public class Connection : MonoBehaviour
     {
         #region RuntimeVariables
@@ -9,6 +22,7 @@ namespace NAwakening.Dijkstra
         [SerializeField] protected Node _nodeA;
         [SerializeField] protected Node _nodeB;
         [SerializeField] protected float distance;
+        [SerializeField] protected ConnectionDirection _direction;
 
         #endregion
 
@@ -17,7 +31,7 @@ namespace NAwakening.Dijkstra
         public void SetIconToConnection()
         {
             gameObject.name = _nodeA.gameObject.name + "-" + _nodeB.gameObject.name;
-            transform.GetChild(0).gameObject.name = distance.ToString("F2");
+            transform.GetChild(0).gameObject.name = distance.ToString("F2") + " - " + _direction;
             IconManager.SetIcon(gameObject, IconManager.LabelIcon.Magenta);
             IconManager.SetIcon(transform.GetChild(0).gameObject, IconManager.LabelIcon.Yellow);
         }
@@ -37,6 +51,15 @@ namespace NAwakening.Dijkstra
             }
             Debug.LogError(this.name + " " + gameObject.name + " - Node " + value.name + " in asking for a connection not valid with " + _nodeA.name + " - " + _nodeB.name + ".", value.gameObject);
             return null;
+        }
+
+        public bool AmINodeA(Node value)
+        {
+            if (value == _nodeA)
+            {
+                return true;
+            }
+            else return false;
         }
 
         #endregion
@@ -59,6 +82,12 @@ namespace NAwakening.Dijkstra
         {
             get { return distance; }
             set { distance = value; }
+        }
+
+        public ConnectionDirection Direction
+        {
+            get { return _direction; }
+            set { _direction = value; }
         }
 
         #endregion

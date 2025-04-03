@@ -20,6 +20,14 @@ namespace NAwakening.Dijkstra
             {
                 _dijkstra.CreateLayout();
             }
+            if (GUILayout.Button("Simplify Layout"))
+            {
+                _dijkstra.SimplifyLayout();
+            }
+            if (GUILayout.Button("Start Dijkstra"))
+            {
+                _dijkstra.StartDijkstra();
+            }
             if (GUILayout.Button("Clear All"))
             {
                 _dijkstra.ResestAll();

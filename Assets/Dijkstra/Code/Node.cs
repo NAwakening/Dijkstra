@@ -13,6 +13,7 @@ namespace NAwakening.Dijkstra
     }
 
     #endregion
+
     public class Node : MonoBehaviour
     {
         #region Parameters
@@ -40,7 +41,18 @@ namespace NAwakening.Dijkstra
             }
             else
             {
-                IconManager.SetIcon(gameObject, IconManager.LabelIcon.Green);
+                if (_startNode)
+                {
+                    IconManager.SetIcon(gameObject, IconManager.LabelIcon.Blue);
+                }
+                else if (_endNode)
+                {
+                    IconManager.SetIcon(gameObject, IconManager.LabelIcon.Red);
+                }
+                else
+                {
+                    IconManager.SetIcon(gameObject, IconManager.LabelIcon.Green);
+                }
             }
         }
 
@@ -57,6 +69,16 @@ namespace NAwakening.Dijkstra
         public List<Connection> Connections
         {
             get { return _connections; }
+        }
+
+        public bool SetStartNode
+        {
+            set { _startNode = value; }
+        }
+
+        public bool SetEndNode
+        {
+            set { _endNode = value; }
         }
 
         #endregion
