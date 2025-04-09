@@ -124,21 +124,17 @@ namespace NAwakening.Dijkstra
         protected void CreateGraph()
         {
             float t_maxDistance = Mathf.Sqrt(Mathf.Pow(_distance.x, 2) + Mathf.Pow(_distance.y, 2));
-            Debug.Log("Iniciando creacion de conecciones");
             for (int i = 0 ; i < _nodes.Count; i++)
             {
                 if (_nodes[i].State == NodeState.HABILITADO)
                 {
-                    Debug.Log("Nodo Habilitado");
                     for (int j = 0; j < _nodes.Count; j++)
                     {
                         if (_nodes[i] != _nodes[j] && _nodes[j].State == NodeState.HABILITADO)
                         {
-                            Vector3 _directionAndMagnitude = _nodes[j].transform.position - _nodes[i].transform.position;
-                            Debug.Log("Ambos nodos son diferentes y habilitados");
-                            if (_directionAndMagnitude.magnitude <= t_maxDistance)
+                            Vector3 t_directionAndMagnitude = _nodes[j].transform.position - _nodes[i].transform.position;
+                            if (IsInRange(t_directionAndMagnitude, t_maxDistance))
                             {
-                                Debug.Log("Los nodos están en el rango de distancia");
                                 bool t_allreadyConnected = false;
                                 if (_nodes[i].Connections.Count > 0)
                                 {
@@ -152,34 +148,33 @@ namespace NAwakening.Dijkstra
                                 }
                                 if (!t_allreadyConnected)
                                 {
-                                    Debug.Log("Los nodos aún no están conectados");
-                                    if (!Physics.Raycast(_nodes[i].transform.position, _directionAndMagnitude.normalized, out _hit, _directionAndMagnitude.magnitude, LayerMask.GetMask("Obstacle")))
+                                    if (!Physics.Raycast(_nodes[i].transform.position, t_directionAndMagnitude.normalized, out _hit, t_directionAndMagnitude.magnitude, LayerMask.GetMask("Obstacle")))
                                     {
-                                        if (!Physics.Raycast(_nodes[j].transform.position, (_directionAndMagnitude * -1).normalized, out _hit, _directionAndMagnitude.magnitude, LayerMask.GetMask("Obstacle")))
+                                        if (!Physics.Raycast(_nodes[j].transform.position, (t_directionAndMagnitude * -1).normalized, out _hit, t_directionAndMagnitude.magnitude, LayerMask.GetMask("Obstacle")))
                                         {
                                             Debug.Log("Creando coneción");
                                             GameObject t_connection = Instantiate(_connection);
                                             t_connection.transform.parent = _connectionParent;
                                             t_connection.GetComponent<Connection>().NodeA = _nodes[i];
                                             t_connection.GetComponent<Connection>().NodeB = _nodes[j];
-                                            t_connection.GetComponent<Connection>().Distance = _directionAndMagnitude.magnitude;
+                                            t_connection.GetComponent<Connection>().Distance = t_directionAndMagnitude.magnitude;
                                             
-                                            t_connection.transform.position = _nodes[i].transform.position + (_directionAndMagnitude / 2);
+                                            t_connection.transform.position = _nodes[i].transform.position + (t_directionAndMagnitude / 2);
                                             _connections.Add(t_connection.GetComponent<Connection>());
                                             _nodes[i].Connections.Add(t_connection.GetComponent<Connection>());
                                             _nodes[j].Connections.Add(t_connection.GetComponent<Connection>());
-                                            Debug.Log(_directionAndMagnitude.normalized);
-                                            if (_directionAndMagnitude.normalized == new Vector3(1f, 0f, 0f))
+                                            Debug.Log(t_directionAndMagnitude.normalized);
+                                            if (t_directionAndMagnitude.normalized == new Vector3(1f, 0f, 0f))
                                             {
                                                 t_connection.GetComponent<Connection>().Direction = ConnectionDirection.Horizontal;
                                             }
-                                            else if (_directionAndMagnitude.normalized == new Vector3(0f, 0f, 1f))
+                                            else if (t_directionAndMagnitude.normalized == new Vector3(0f, 0f, 1f))
                                             {
                                                 t_connection.GetComponent<Connection>().Direction = ConnectionDirection.Vertical;
                                             }
                                             else 
                                             {
-                                                if (_directionAndMagnitude.normalized.x <= 0f)
+                                                if (t_directionAndMagnitude.normalized.x <= 0f)
                                                 {
                                                     t_connection.GetComponent<Connection>().Direction = ConnectionDirection.DiagonalSE_NO;
                                                 }
@@ -201,6 +196,43 @@ namespace NAwakening.Dijkstra
             }
         }
 
+        protected bool IsInRange(Vector3 distance, float maxDistance)
+        {
+            if (distance.normalized == new Vector3(0f, 0f, 1f))
+            {
+                if (distance.magnitude <= _distance.y)
+                {
+                    return true;
+                }
+                else 
+                { 
+                    return false; 
+                }
+            }
+            else if (distance.normalized == new Vector3(1f, 0f, 0f))
+            {
+                if (distance.magnitude <= _distance.x)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                if (distance.magnitude <= maxDistance)
+                {
+                    return true;
+                }
+                else 
+                { 
+                    return false; 
+                }
+            }
+        }
+
         protected void EliminateRedudantConections()
         {
             for (int i = 0; i < _nodes.Count; i++)
@@ -209,7 +241,7 @@ namespace NAwakening.Dijkstra
                 {
                     if (_nodes[i].Connections.Count == 2)
                     {
-                        if (_nodes[i].Connections[0].Direction == _nodes[i].Connections[1].Direction && _nodes[i].Connections[0].Direction != ConnectionDirection.Modified)
+                        if (_nodes[i].Connections[0].Direction == _nodes[i].Connections[1].Direction)
                         {
                             FuseConnections(_nodes[i].Connections[0], _nodes[i].Connections[1], _nodes[i]);
                             _nodes[i].State = NodeState.DESHABILITADO;
@@ -263,6 +295,7 @@ namespace NAwakening.Dijkstra
                     else
                     {
                         t_second = p_node.Connections[j];
+                        break;
                     }
                 }
             }
