@@ -3,6 +3,18 @@ using UnityEngine;
 
 namespace NAwakening.Dijkstra
 {
+    #region Structs
+
+    [System.Serializable]
+    public struct Route
+    {
+        [SerializeField] public List<Node> visitedNodes;
+        [SerializeField] public float distance;
+        [SerializeField] public bool reachedEndNode;
+    }
+
+    #endregion
+
     public class Dijkstra : MonoBehaviour
     {
         #region References
@@ -31,6 +43,9 @@ namespace NAwakening.Dijkstra
         protected Node _endNode;
         [SerializeField] protected List<Connection> _connections;
         protected RaycastHit _hit;
+        [SerializeField] protected List<Route> _routes;
+        [SerializeField] protected List<Route> _succesfullRoutes;
+        [SerializeField] protected Route _initialRoute;
 
         #endregion
 
@@ -49,7 +64,9 @@ namespace NAwakening.Dijkstra
 
         public void StartDijkstra()
         {
-
+            _initialRoute.visitedNodes.Add(_startNode);
+            _routes.Add(_initialRoute);
+            SearchNeighbours(_startNode, _initialRoute);
         }
 
         public void ResestAll()
@@ -302,6 +319,28 @@ namespace NAwakening.Dijkstra
             FuseConnections(t_first, t_second, p_node);
         }
 
+        protected void SearchNeighbours(Node p_previousNode, Route p_allreadyVisitedNode)
+        {
+            for(int i = 0; i < p_previousNode.Connections.Count; i++)
+            {
+                if (!p_allreadyVisitedNode.visitedNodes.Contains(p_previousNode.Connections[i].OtherNode(p_previousNode)))
+                {
+                    Route currentRoute = new Route();
+                    currentRoute.visitedNodes = new List<Node>(p_allreadyVisitedNode.visitedNodes);
+                    currentRoute.visitedNodes.Add(p_previousNode.Connections[i].OtherNode(p_previousNode));
+                    currentRoute.distance = p_allreadyVisitedNode.distance + p_previousNode.Connections[i].Distance;
+                    if (p_previousNode.Connections[i].OtherNode(p_previousNode) == _endNode)
+                    {
+                        currentRoute.reachedEndNode = true;
+                        _succesfullRoutes.Add(currentRoute);
+                        continue;
+                    }
+                    _routes.Add(currentRoute);
+                    SearchNeighbours(p_previousNode.Connections[i].OtherNode(p_previousNode), currentRoute);
+                }
+            }
+        }
+
         protected void DestroyEverything()
         {
             foreach (Node node in _nodeParent.GetComponentsInChildren<Node>())
@@ -315,6 +354,10 @@ namespace NAwakening.Dijkstra
                 DestroyImmediate(connection.gameObject);
             }
             _connections.Clear();
+
+            _initialRoute.visitedNodes.Clear();
+            _routes.Clear();
+            _succesfullRoutes.Clear();
         }
 
         #endregion
