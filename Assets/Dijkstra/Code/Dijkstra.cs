@@ -10,7 +10,6 @@ namespace NAwakening.Dijkstra
     {
         [SerializeField] public List<Node> visitedNodes;
         [SerializeField] public float distance;
-        [SerializeField] public bool reachedEndNode;
     }
 
     #endregion
@@ -331,7 +330,6 @@ namespace NAwakening.Dijkstra
                     currentRoute.distance = p_allreadyVisitedNode.distance + p_previousNode.Connections[i].Distance;
                     if (p_previousNode.Connections[i].OtherNode(p_previousNode) == _endNode)
                     {
-                        currentRoute.reachedEndNode = true;
                         _succesfullRoutes.Add(currentRoute);
                         continue;
                     }
