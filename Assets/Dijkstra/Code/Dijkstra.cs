@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using Unity.VisualScripting;
+using UnityEditor;
 using UnityEngine;
 
 namespace NAwakening.Dijkstra
@@ -8,7 +10,8 @@ namespace NAwakening.Dijkstra
     [System.Serializable]
     public struct Route
     {
-        [SerializeField] public List<Node> visitedNodes;
+        //[SerializeField] public List<Node> visitedNodes;
+        [SerializeField] public List<int> idsVisitedNodes;
         [SerializeField] public float distance;
     }
 
@@ -18,33 +21,36 @@ namespace NAwakening.Dijkstra
     {
         #region References
 
-        [SerializeField] protected GameObject _node;
-        [SerializeField] protected Transform _startPosition;
-        [SerializeField] protected Transform _endPosition;
-        [SerializeField] protected Transform _nodeParent;
-        [SerializeField] protected GameObject _connection;
-        [SerializeField] protected Transform _connectionParent;
+        [SerializeField, HideInInspector] protected GameObject _node;
+        [SerializeField, HideInInspector] protected Transform _startPosition;
+        [SerializeField, HideInInspector] protected Transform _endPosition;
+        [SerializeField, HideInInspector] protected Transform _nodeParent;
+        [SerializeField, HideInInspector] protected GameObject _connection;
+        [SerializeField, HideInInspector] protected Transform _connectionParent;
+        [SerializeField] protected NPC_SO _behaviour;
 
         #endregion
 
         #region Parameters
 
-        [SerializeField] protected Vector2 _mapDimensions;
+        [SerializeField, HideInInspector] protected Vector2 _mapDimensions;
         [SerializeField] protected Vector2 _numberOfNodes;
+        [SerializeField] protected float _speed;
 
         #endregion
 
         #region RuntimeVariables
 
-        [SerializeField] protected List<Node> _nodes;
+        [SerializeField, HideInInspector] protected List<Node> _nodes;
         protected Vector2 _distance;
         protected Node _startNode;
         protected Node _endNode;
-        [SerializeField] protected List<Connection> _connections;
+        [SerializeField, HideInInspector] protected List<Connection> _connections;
         protected RaycastHit _hit;
-        [SerializeField] protected List<Route> _routes;
-        [SerializeField] protected List<Route> _succesfullRoutes;
-        [SerializeField] protected Route _initialRoute;
+        [SerializeField, HideInInspector] protected List<Route> _routes;
+        [SerializeField, HideInInspector] protected List<Route> _succesfullRoutes;
+        [SerializeField, HideInInspector] protected Route _initialRoute;
+        [SerializeField] protected Route _bestRoute;
 
         #endregion
 
@@ -63,9 +69,13 @@ namespace NAwakening.Dijkstra
 
         public void StartDijkstra()
         {
-            _initialRoute.visitedNodes.Add(_startNode);
+            _initialRoute.idsVisitedNodes.Add(_startNode.GetNodeID);
             _routes.Add(_initialRoute);
             SearchNeighbours(_startNode, _initialRoute);
+            Debug.Log("Unsuccesful Routes: " + _routes.Count);
+            Debug.Log("Succesful Routes: " + _succesfullRoutes.Count);
+            Debug.Log("Total Routes: " + (_routes.Count + _succesfullRoutes.Count));
+            AssignBestRouteToAgent();
         }
 
         public void ResestAll()
@@ -168,7 +178,6 @@ namespace NAwakening.Dijkstra
                                     {
                                         if (!Physics.Raycast(_nodes[j].transform.position, (t_directionAndMagnitude * -1).normalized, out _hit, t_directionAndMagnitude.magnitude, LayerMask.GetMask("Obstacle")))
                                         {
-                                            Debug.Log("Creando coneción");
                                             GameObject t_connection = Instantiate(_connection);
                                             t_connection.transform.parent = _connectionParent;
                                             t_connection.GetComponent<Connection>().NodeA = _nodes[i];
@@ -179,12 +188,11 @@ namespace NAwakening.Dijkstra
                                             _connections.Add(t_connection.GetComponent<Connection>());
                                             _nodes[i].Connections.Add(t_connection.GetComponent<Connection>());
                                             _nodes[j].Connections.Add(t_connection.GetComponent<Connection>());
-                                            Debug.Log(t_directionAndMagnitude.normalized);
-                                            if (t_directionAndMagnitude.normalized == new Vector3(1f, 0f, 0f))
+                                            if (t_directionAndMagnitude.normalized == new Vector3(1f, 0f, 0f) || t_directionAndMagnitude.normalized == new Vector3(-1f, 0f, 0f))
                                             {
                                                 t_connection.GetComponent<Connection>().Direction = ConnectionDirection.Horizontal;
                                             }
-                                            else if (t_directionAndMagnitude.normalized == new Vector3(0f, 0f, 1f))
+                                            else if (t_directionAndMagnitude.normalized == new Vector3(0f, 0f, 1f) || t_directionAndMagnitude.normalized == new Vector3(0f, 0f, -1f))
                                             {
                                                 t_connection.GetComponent<Connection>().Direction = ConnectionDirection.Vertical;
                                             }
@@ -253,7 +261,7 @@ namespace NAwakening.Dijkstra
         {
             for (int i = 0; i < _nodes.Count; i++)
             {
-                if (_nodes[i].State == NodeState.HABILITADO)
+                if (_nodes[i].State == NodeState.HABILITADO && _nodes[i] != _endNode && _nodes[i] != _startNode)
                 {
                     if (_nodes[i].Connections.Count == 2)
                     {
@@ -322,11 +330,11 @@ namespace NAwakening.Dijkstra
         {
             for(int i = 0; i < p_previousNode.Connections.Count; i++)
             {
-                if (!p_allreadyVisitedNode.visitedNodes.Contains(p_previousNode.Connections[i].OtherNode(p_previousNode)))
+                if (!p_allreadyVisitedNode.idsVisitedNodes.Contains(p_previousNode.Connections[i].OtherNode(p_previousNode).GetNodeID))
                 {
                     Route currentRoute = new Route();
-                    currentRoute.visitedNodes = new List<Node>(p_allreadyVisitedNode.visitedNodes);
-                    currentRoute.visitedNodes.Add(p_previousNode.Connections[i].OtherNode(p_previousNode));
+                    currentRoute.idsVisitedNodes = new List<int>(p_allreadyVisitedNode.idsVisitedNodes);
+                    currentRoute.idsVisitedNodes.Add(p_previousNode.Connections[i].OtherNode(p_previousNode).GetNodeID);
                     currentRoute.distance = p_allreadyVisitedNode.distance + p_previousNode.Connections[i].Distance;
                     if (p_previousNode.Connections[i].OtherNode(p_previousNode) == _endNode)
                     {
@@ -337,6 +345,34 @@ namespace NAwakening.Dijkstra
                     SearchNeighbours(p_previousNode.Connections[i].OtherNode(p_previousNode), currentRoute);
                 }
             }
+        }
+
+        protected void AssignBestRouteToAgent()
+        {
+            float minDistance = Mathf.Infinity;
+            int minIndex = 0;
+            for (int i = 0; i < _succesfullRoutes.Count; i++)
+            {
+                if (_succesfullRoutes[i].distance < minDistance)
+                {
+                    minIndex = i;
+                    minDistance = _succesfullRoutes[i].distance;
+                }
+            }
+            _bestRoute = _succesfullRoutes[minIndex];
+            for (int i = 1; i < _succesfullRoutes[minIndex].idsVisitedNodes.Count; i++)
+            {
+                Behaviour currentMove = new Behaviour();
+                currentMove.stateMechanic = StateMechanic.MOVE;
+                currentMove.velocity = _speed;
+                currentMove.destinyDirection = ((GameObject)EditorUtility.InstanceIDToObject(_succesfullRoutes[minIndex].idsVisitedNodes[i])).transform.position;
+                _behaviour.behaviour.Add(currentMove);
+            }
+            Behaviour finalBehaviour = new Behaviour();
+            finalBehaviour.stateMechanic = StateMechanic.STOP;
+            finalBehaviour.velocity = -1;
+            _behaviour.behaviour.Add(finalBehaviour);
+
         }
 
         protected void DestroyEverything()
@@ -353,9 +389,10 @@ namespace NAwakening.Dijkstra
             }
             _connections.Clear();
 
-            _initialRoute.visitedNodes.Clear();
+            _initialRoute.idsVisitedNodes.Clear();
             _routes.Clear();
             _succesfullRoutes.Clear();
+            _behaviour.behaviour.Clear();
         }
 
         #endregion

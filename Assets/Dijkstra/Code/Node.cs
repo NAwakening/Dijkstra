@@ -81,6 +81,11 @@ namespace NAwakening.Dijkstra
             set { _endNode = value; }
         }
 
+        public int GetNodeID
+        {
+            get { return gameObject.GetInstanceID(); }
+        }
+
         #endregion
     }
 }
