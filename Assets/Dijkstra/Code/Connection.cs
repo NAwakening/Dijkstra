@@ -24,6 +24,9 @@ namespace NAwakening.Dijkstra
         [SerializeField] protected float distance;
         [SerializeField] protected ConnectionDirection _direction;
 
+        Vector3 _origin;
+        Vector3 _directionAndMagnitude;
+
         #endregion
 
         #region PublicMethods
@@ -63,6 +66,13 @@ namespace NAwakening.Dijkstra
         }
 
         #endregion
+
+        private void OnDrawGizmos()
+        {
+            _origin = _nodeA.transform.position;
+            _directionAndMagnitude = _nodeB.transform.position - _origin;
+            Debug.DrawRay(_origin, _directionAndMagnitude, Color.black);
+        }
 
         #region GettersAndSetteres
 

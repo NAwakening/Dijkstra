@@ -21,19 +21,19 @@ namespace NAwakening.Dijkstra
     {
         #region References
 
-        [SerializeField, HideInInspector] protected GameObject _node;
-        [SerializeField, HideInInspector] protected Transform _startPosition;
-        [SerializeField, HideInInspector] protected Transform _endPosition;
-        [SerializeField, HideInInspector] protected Transform _nodeParent;
-        [SerializeField, HideInInspector] protected GameObject _connection;
-        [SerializeField, HideInInspector] protected Transform _connectionParent;
+        [SerializeField] protected GameObject _node;
+        [SerializeField] protected Transform _startPosition;
+        [SerializeField] protected Transform _endPosition;
+        [SerializeField] protected Transform _nodeParent;
+        [SerializeField] protected GameObject _connection;
+        [SerializeField] protected Transform _connectionParent;
         [SerializeField] protected NPC_SO _behaviour;
 
         #endregion
 
         #region Parameters
 
-        [SerializeField, HideInInspector] protected Vector2 _mapDimensions;
+        [SerializeField] protected Vector2 _mapDimensions;
         [SerializeField] protected Vector2 _numberOfNodes;
         [SerializeField] protected float _speed;
 
@@ -112,7 +112,7 @@ namespace NAwakening.Dijkstra
                     }
                     if (t_node.GetComponent<Node>().State == NodeState.HABILITADO)
                     {
-                        if (t_startMinDistance == 0)
+                        if (i == 0 && j == 0)
                         {
                             float t_magnitude = (_startPosition.position - t_node.transform.position).magnitude;
                             t_startMinDistance = t_magnitude;
@@ -349,30 +349,32 @@ namespace NAwakening.Dijkstra
 
         protected void AssignBestRouteToAgent()
         {
-            float minDistance = Mathf.Infinity;
-            int minIndex = 0;
-            for (int i = 0; i < _succesfullRoutes.Count; i++)
+            if (_succesfullRoutes.Count != 0)
             {
-                if (_succesfullRoutes[i].distance < minDistance)
+                float minDistance = Mathf.Infinity;
+                int minIndex = 0;
+                for (int i = 0; i < _succesfullRoutes.Count; i++)
                 {
-                    minIndex = i;
-                    minDistance = _succesfullRoutes[i].distance;
+                    if (_succesfullRoutes[i].distance < minDistance)
+                    {
+                        minIndex = i;
+                        minDistance = _succesfullRoutes[i].distance;
+                    }
                 }
-            }
-            _bestRoute = _succesfullRoutes[minIndex];
-            for (int i = 1; i < _succesfullRoutes[minIndex].idsVisitedNodes.Count; i++)
-            {
-                Behaviour currentMove = new Behaviour();
-                currentMove.stateMechanic = StateMechanic.MOVE;
-                currentMove.velocity = _speed;
-                currentMove.destinyDirection = ((GameObject)EditorUtility.InstanceIDToObject(_succesfullRoutes[minIndex].idsVisitedNodes[i])).transform.position;
-                _behaviour.behaviour.Add(currentMove);
+                _bestRoute = _succesfullRoutes[minIndex];
+                for (int i = 1; i < _succesfullRoutes[minIndex].idsVisitedNodes.Count; i++)
+                {
+                    Behaviour currentMove = new Behaviour();
+                    currentMove.stateMechanic = StateMechanic.MOVE;
+                    currentMove.velocity = _speed;
+                    currentMove.destinyDirection = ((GameObject)EditorUtility.InstanceIDToObject(_succesfullRoutes[minIndex].idsVisitedNodes[i])).transform.position;
+                    _behaviour.behaviour.Add(currentMove);
+                }
             }
             Behaviour finalBehaviour = new Behaviour();
             finalBehaviour.stateMechanic = StateMechanic.STOP;
             finalBehaviour.velocity = -1;
             _behaviour.behaviour.Add(finalBehaviour);
-
         }
 
         protected void DestroyEverything()
